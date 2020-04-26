@@ -1,0 +1,38 @@
+\:host
+  display: block
+  overflow: auto
+
+.shortcuts
+  margin-bottom: 4px
+  color: #999
+  font-size: 14px
+  text-align: center
+
+  span:not(:last-child)
+    margin-right: 8px
+
+.search-input
+  width: 100%
+  --mdc-theme-primary: #888
+  --mdc-text-field-fill-color: rgba(0,0,0,.8)
+  --mdc-text-field-ink-color: #ddd
+  --mdc-text-field-filled-border-radius: 8px 8px 0 0
+
+.results
+  max-height: 480px
+  background: rgba(0,0,0,.7)
+  border-radius: 0 0 8px 8px
+  overflow-y: scroll
+  overflow-y: -moz-scrollbars-none
+  -ms-overflow-style: none
+  scrollbar-width: thin
+
+  &::-webkit-scrollbar
+    display: none
+
+.no-results
+  text-align: center
+  padding: 12px 0
+  color: #444
+  font-size: 14px
+
