@@ -2,7 +2,8 @@ import config from 'config.dev'
 
 export interface Action {
   prefix: string
-  url: string
+  url?: string
+  internal?: boolean
 }
 
 export interface Link {

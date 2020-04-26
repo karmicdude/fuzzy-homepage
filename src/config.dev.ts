@@ -227,5 +227,13 @@ export default {
       },
       tags: [ 'action' ],
     },
+    {
+      name: 'load',
+      action: {
+        prefix: 'load: ',
+        internal: true,
+      },
+      tags: [ 'action' ],
+    },
   ],
 };

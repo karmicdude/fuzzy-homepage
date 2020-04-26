@@ -65,7 +65,15 @@ export class HpSearch extends LitElement {
       let res = this.results[this.hovered]
       if (res) {
         if (res.action) {
-          window.location.href = `${res.action.url}${this.value.slice(res.action.prefix.length)}`
+          let value = this.value.slice(res.action.prefix.length)
+          if (res.action.internal)  {
+            const actionFn = this[`_${res.name}_action`]
+            if (typeof actionFn === 'function') {
+              actionFn(value)
+            }
+          } else if (res.action.url) {
+            window.location.href = `${res.action.url}${value}`
+          }
         } else if (res.url) {
           window.location.href = res.url
         }
@@ -83,6 +91,23 @@ export class HpSearch extends LitElement {
     }
     if (this.hovered < 0) {
       this.hovered = 0
+    }
+  }
+
+  async _load_action(value: string) {
+    if (value.match(/^https:\/\/.*\.json$/)) {
+      console.log('LOAD ACTION', value)
+
+      const res = await fetch(value, {
+        // mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+
+      console.log(res)
+      console.log(res.json())
+
     }
   }
 
