@@ -16,7 +16,14 @@ module.exports = merge(common, {
       // and not allow any straggling "old" SWs to hang around
       clientsClaim: true,
       skipWaiting: true,
+      runtimeCaching: [
+        {
+          handler: 'StaleWhileRevalidate',
+          urlPattern: /^https:\/\/.*\.json$/
+        }
+      ]
     }),
+
 
   //   new webpack.NormalModuleReplacementPlugin(
   //     /src\/config\.dev\.ts/,

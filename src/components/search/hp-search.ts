@@ -139,8 +139,10 @@ export class HpSearch extends LitElement {
     }
   }
 
-  async _load_action(value: string) {
+  _load_action = async (value: string) => {
     await store.load(value)
+    this.value = ''
+    this.input!.value = ''
   }
 
   _onInput = (e: InputEvent) => {
