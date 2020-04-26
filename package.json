@@ -10,11 +10,12 @@
     "watch": "webpack --watch",
     "format": "prettier --write \"{__tests__,src}/**/*.{js,ts,scss,html}\"",
     "lint": "eslint \"**/*.ts\" -f eslint-formatter-friendly",
-    "pretest": "npm run lint",
-    "build": "npm run clean && webpack --config ./webpack/webpack.prod.js",
+    "pretest": "yarn lint",
+    "build": "yarn clean && webpack --config ./webpack/webpack.prod.js",
     "test": "karma start --single-run --browsers ChromeHeadless",
     "test-watch": "karma start --browsers ChromeHeadless",
-    "serve": "http-server dist"
+    "serve": "http-server dist",
+    "deploy": "yarn build && git add . && git subtree push --prefix dist origin gh-pages"
   },
   "license": "ISC",
   "devDependencies": {
