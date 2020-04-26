@@ -15,7 +15,7 @@
     "test": "karma start --single-run --browsers ChromeHeadless",
     "test-watch": "karma start --browsers ChromeHeadless",
     "serve": "http-server dist",
-    "deploy": "yarn build && git add . && git subtree push --prefix dist origin gh-pages"
+    "deploy": "git subtree push --prefix dist origin gh-pages"
   },
   "license": "ISC",
   "devDependencies": {
