@@ -206,6 +206,12 @@ export default {
       tags: [],
     },
     {
+      name: 'Fuzzy Homepage Github',
+      url: 'https://github.com/alxdnlnko/fuzzy-homepage',
+      tags: [],
+    },
+
+    {
       name: 'translate',
       action: {
         prefix: 'translate: ',
