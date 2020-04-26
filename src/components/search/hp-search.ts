@@ -1,17 +1,19 @@
-import { LitElement, html, customElement, property } from 'lit-element'
+import { LitElement, html, customElement, property, PropertyValues } from 'lit-element'
 
 import '@material/mwc-textfield'
 import Fuse from 'fuse.js'
 
 import styles from './hp-search.sass'
 import { Link } from 'utils/config'
-import config from 'utils/config'
-import store from './store'
+import store, { UnsubscribeFn } from './store'
 
 import './link/hp-link'
 
 @customElement('hp-search')
 export class HpSearch extends LitElement {
+  @property({ type: Array })
+  links: Link[] = []
+
   @property({ type: Number })
   hovered: number = 0
 
@@ -22,28 +24,70 @@ export class HpSearch extends LitElement {
   value: string = ''
 
   input?: HTMLInputElement
+  _unsub?: UnsubscribeFn
 
-  static get styles() {
-    return [ styles ]
+  static styles = [ styles ]
+
+  connectedCallback() {
+    this._unsub = store.subscribe(this._updateLinks)
+    super.connectedCallback()
+  }
+
+  disconnectedCallback() {
+    if (typeof this._unsub === 'function') {
+      this._unsub()
+    }
+    window.removeEventListener('keydown', this._onKeyDown)
+    super.disconnectedCallback()
   }
 
   firstUpdated() {
     this.input = this.shadowRoot!.getElementById('input') as HTMLInputElement
-    window.addEventListener('keydown', this.onKeyDown)
-    this.setResults(store.links)
+    window.addEventListener('keydown', this._onKeyDown)
   }
 
-  disconnectedCallback() {
-    window.removeEventListener('keydown', this.onKeyDown)
+  updated(changes: PropertyValues) {
+    if (changes.has('hovered')) {
+      setTimeout(this._updateResultsScroll, 0)
+    }
+
+    if (changes.has('value') || changes.has('links')) {
+      setTimeout(this._updateResults, 0)
+    }
+
+    if (changes.has('results')) {
+      setTimeout(() => this.hovered = 0, 0)
+    }
   }
 
-  setResults(items: Link[]) {
-    // this.results = [...items].slice(0, config.search.maxResults)
-    this.results = [...items]
-    this.hovered = 0
+  _updateLinks = (links: Link[]) => {
+    this.links = links
   }
 
-  onKeyDown = (e: KeyboardEvent) => {
+  _updateResults = () => {
+    let matches = Array.from(this.value.matchAll(/^(\w+: )/g), m => m[0])
+    if (matches.length) {
+      // Action found!
+      this.results = this.links.filter(l => l.action?.prefix === matches[0])
+      return
+    }
+
+    let res = this.value.split(' ').reduce((res, val) => {
+      if (!val) return res
+
+      let fuse = new Fuse(res, {
+        keys: ['tags', 'name'],
+        threshold: 0.4,
+        findAllMatches: true,
+      })
+      res = fuse.search(val).map(r => r.item)
+      return res
+    }, this.links)
+
+    this.results = res
+  }
+
+  _onKeyDown = (e: KeyboardEvent) => {
     let matched = false
     if (e.ctrlKey && e.key === 'j' || e.key === 'ArrowDown') {
       this.hovered++
@@ -99,37 +143,11 @@ export class HpSearch extends LitElement {
     await store.load(value)
   }
 
-  onInput = (e: InputEvent) => {
+  _onInput = (e: InputEvent) => {
     this.value = (e.target as HTMLInputElement)?.value
-    let matches = Array.from(this.value.matchAll(/^(\w+: )/g), m => m[0])
-    if (matches.length) {
-      // Action found!
-      this.setResults(store.links.filter(l => l.action?.prefix === matches[0]))
-      return
-    }
-
-    let res = this.value.split(' ').reduce((res, val) => {
-      if (!val) return res
-
-      let fuse = new Fuse(res, {
-        keys: ['tags', 'name'],
-        threshold: 0.4,
-        findAllMatches: true,
-      })
-      res = fuse.search(val).map(r => r.item)
-      return res
-    }, store.links)
-
-    this.setResults(res)
   }
 
-  updated(changes) {
-    if (changes.has('hovered')) {
-      setTimeout(this.updateResultsScroll, 0)
-    }
-  }
-
-  updateResultsScroll = () => {
+  _updateResultsScroll = () => {
     const res = this.shadowRoot?.querySelector('.results')
     const item = this.shadowRoot?.querySelector('hp-link[hovered]')
 
@@ -163,7 +181,7 @@ export class HpSearch extends LitElement {
         id="input"
         class="search-input"
         autofocus
-        @input=${this.onInput}
+        @input=${this._onInput}
       ></mwc-textfield>
 
       <div class="results">

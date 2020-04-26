@@ -4,12 +4,37 @@ import { setCookie, getCookie } from 'utils/cookies'
 
 const SOURCE_COOKIE = 'links-source'
 
+export type SubscriberFn = (links: Link[]) => void
+export type UnsubscribeFn = () => void
+
 class Store {
   links: Link[]
+  _subs: SubscriberFn[] = []
 
   constructor() {
     this.links = [ ...config.links ]
     this._initLinks()
+  }
+
+  _setLinks(links: Link[]) {
+    this.links = [ ...links ]
+    this._updateSubscribers()
+  }
+
+  _updateSubscribers(): void {
+    this._subs.forEach(s => s(this.links))
+  }
+
+  subscribe(cb: SubscriberFn) {
+    const ind = this._subs.length
+    this._subs.push(cb)
+
+    // notify immediatelly with current data
+    cb(this.links)
+
+    return () => {
+      this._subs.splice(ind, 1)
+    }
   }
 
   async _initLinks(): Promise<void> {
@@ -18,7 +43,7 @@ class Store {
 
     const data = await this._fetchLinks(url)
     if (data) {
-      this.links = [ ...data, ...this.links ]
+      this._setLinks([ ...data, ...config.links ])
     }
   }
 
@@ -29,7 +54,7 @@ class Store {
 
       const data = await this._fetchLinks(url)
       if (data) {
-        this.links = [ ...data, ...this.links ]
+        this._setLinks([ ...data, ...config.links ])
       }
     }
 
