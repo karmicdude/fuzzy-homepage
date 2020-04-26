@@ -6,6 +6,7 @@ import Fuse from 'fuse.js'
 import styles from './hp-search.sass'
 import { Link } from 'utils/config'
 import config from 'utils/config'
+import store from './store'
 
 import './link/hp-link'
 
@@ -29,7 +30,7 @@ export class HpSearch extends LitElement {
   firstUpdated() {
     this.input = this.shadowRoot!.getElementById('input') as HTMLInputElement
     window.addEventListener('keydown', this.onKeyDown)
-    this.setResults(config.links)
+    this.setResults(store.links)
   }
 
   disconnectedCallback() {
@@ -95,20 +96,7 @@ export class HpSearch extends LitElement {
   }
 
   async _load_action(value: string) {
-    if (value.match(/^https:\/\/.*\.json$/)) {
-      console.log('LOAD ACTION', value)
-
-      const res = await fetch(value, {
-        // mode: 'no-cors',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-      })
-
-      console.log(res)
-      console.log(res.json())
-
-    }
+    await store.load(value)
   }
 
   onInput = (e: InputEvent) => {
@@ -116,7 +104,7 @@ export class HpSearch extends LitElement {
     let matches = Array.from(this.value.matchAll(/^(\w+: )/g), m => m[0])
     if (matches.length) {
       // Action found!
-      this.setResults(config.links.filter(l => l.action?.prefix === matches[0]))
+      this.setResults(store.links.filter(l => l.action?.prefix === matches[0]))
       return
     }
 
@@ -130,7 +118,7 @@ export class HpSearch extends LitElement {
       })
       res = fuse.search(val).map(r => r.item)
       return res
-    }, config.links)
+    }, store.links)
 
     this.setResults(res)
   }

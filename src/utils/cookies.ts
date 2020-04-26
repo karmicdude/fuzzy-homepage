@@ -1,6 +1,6 @@
-export function setCookie(name, val, days, noDomain) {
+export function setCookie(name: string, val: string, days?: number, noDomain?: boolean) {
   let expires = ''
-  if (+days) {
+  if (days) {
     const date = new Date()
     date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000))
     expires = "; expires= " + date.toUTCString()
@@ -15,6 +15,7 @@ export function setCookie(name, val, days, noDomain) {
     expires +
     domain +
     '; path=/;'
+  console.log(cookieStr)
   document.cookie = cookieStr
 }
 
