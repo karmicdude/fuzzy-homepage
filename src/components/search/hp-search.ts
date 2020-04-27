@@ -5,7 +5,7 @@ import Fuse from 'fuse.js'
 
 import styles from './hp-search.sass'
 import { Link } from 'utils/config'
-import store, { UnsubscribeFn } from './store'
+import store, { UnsubscribeFn, State } from './store'
 
 import './link/hp-link'
 
@@ -13,6 +13,9 @@ import './link/hp-link'
 export class HpSearch extends LitElement {
   @property({ type: Array })
   links: Link[] = []
+
+  @property({ type: Boolean })
+  isLoading: boolean = true
 
   @property({ type: Number })
   hovered: number = 0
@@ -29,7 +32,7 @@ export class HpSearch extends LitElement {
   static styles = [ styles ]
 
   connectedCallback() {
-    this._unsub = store.subscribe(this._updateLinks)
+    this._unsub = store.subscribe(this._stateChanged)
     super.connectedCallback()
   }
 
@@ -51,17 +54,16 @@ export class HpSearch extends LitElement {
       setTimeout(this._updateResultsScroll, 0)
     }
 
-    if (changes.has('value') || changes.has('links')) {
-      setTimeout(this._updateResults, 0)
-    }
-
     if (changes.has('results')) {
       setTimeout(() => this.hovered = 0, 0)
     }
   }
 
-  _updateLinks = (links: Link[]) => {
-    this.links = links
+  _stateChanged = (state: State) => {
+    console.log('state changed', state)
+    this.links = state.links
+    this.isLoading = state.isLoading
+    this._updateResults()
   }
 
   _updateResults = () => {
@@ -82,7 +84,7 @@ export class HpSearch extends LitElement {
       })
       res = fuse.search(val).map(r => r.item)
       return res
-    }, this.links)
+    }, this.links || [])
 
     this.results = res
   }
@@ -143,10 +145,12 @@ export class HpSearch extends LitElement {
     await store.load(value)
     this.value = ''
     this.input!.value = ''
+    this._updateResults()
   }
 
   _onInput = (e: InputEvent) => {
     this.value = (e.target as HTMLInputElement)?.value
+    this._updateResults()
   }
 
   _updateResultsScroll = () => {
@@ -171,6 +175,7 @@ export class HpSearch extends LitElement {
   }
 
   render() {
+    // console.log('render', this.isLoading, this.results)
     return html`
       <div class="shortcuts">
         <span>CTRL-J=&#8595;</span>
@@ -187,16 +192,27 @@ export class HpSearch extends LitElement {
       ></mwc-textfield>
 
       <div class="results">
-        ${this.results.map(
-          l => html`
-            <hp-link .link=${l} ?hovered=${this.results.indexOf(l) === this.hovered}></hp-link>
-          `
-        )}
+        ${this.isLoading
+          ? new Array(10).fill(0).map(
+              _ => html`
+                <hp-link placeholder></hp-link>
+              `
+            )
+          : this.results.map(
+              l => html`
+                <hp-link
+                  .link=${l}
+                  ?hovered=${this.results.indexOf(l) === this.hovered}
+                ></hp-link>
+              `
+            )}
 
-        ${this.results.length === 0 ? html`
-          <div class="no-results">No matches</div>
-        `: ''}
+        ${this.results.length === 0
+          ? html`
+              <div class="no-results">No matches</div>
+            `
+          : ''}
       </div>
-    `
+    `;
   }
 }

@@ -4,10 +4,16 @@ import { setCookie, getCookie } from 'utils/cookies'
 
 const SOURCE_COOKIE = 'links-source'
 
-export type SubscriberFn = (links: Link[]) => void
+export interface State {
+  links: Link[]
+  isLoading: boolean
+}
+
+export type SubscriberFn = (state: State) => void
 export type UnsubscribeFn = () => void
 
 class Store {
+  isLoading: boolean = true
   links: Link[]
   _subs: SubscriberFn[] = []
 
@@ -16,13 +22,25 @@ class Store {
     this._initLinks()
   }
 
+  _getState(): State {
+    return {
+      links: this.links,
+      isLoading: this.isLoading
+    }
+  }
+
   _setLinks(links: Link[]) {
     this.links = [ ...links ]
     this._updateSubscribers()
   }
 
+  _setLoading(val: boolean) {
+    this.isLoading = val
+    this._updateSubscribers()
+  }
+
   _updateSubscribers(): void {
-    this._subs.forEach(s => s(this.links))
+    this._subs.forEach(s => s(this._getState()))
   }
 
   subscribe(cb: SubscriberFn) {
@@ -30,7 +48,7 @@ class Store {
     this._subs.push(cb)
 
     // notify immediatelly with current data
-    cb(this.links)
+    cb(this._getState())
 
     return () => {
       this._subs.splice(ind, 1)
@@ -39,20 +57,25 @@ class Store {
 
   async _initLinks(): Promise<void> {
     const url = getCookie(SOURCE_COOKIE)
-    if (!url) return
+    if (!url) {
+      this._setLoading(false)
+      return
+    }
 
     const data = await this._fetchLinks(url)
     if (data) {
       this._setLinks([ ...data, ...config.links ])
+      this._setLoading(false)
     }
   }
 
   async load(url: string) {
+    this._setLoading(true)
     if (url.match(/^https:\/\/.*\.json$/)) {
       setCookie(SOURCE_COOKIE, url, 0, true)
-      console.log('load!')
 
       const data = await this._fetchLinks(url)
+      this._setLoading(false)
       if (data) {
         this._setLinks([ ...data, ...config.links ])
       }

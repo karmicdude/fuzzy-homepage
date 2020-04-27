@@ -12,11 +12,15 @@ export class HpLink extends LitElement {
   @property({ type: Object })
   link?: Link
 
+  @property({ type: Boolean, reflect: true })
+  placeholder?: boolean = false
+
   static get styles() {
     return [ styles ]
   }
 
   render() {
+    if (this.placeholder) return ''
     if (!this.link) return ''
 
     const style = {
