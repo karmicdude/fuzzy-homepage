@@ -60,7 +60,6 @@ export class HpSearch extends LitElement {
   }
 
   _stateChanged = (state: State) => {
-    console.log('state changed', state)
     this.links = state.links
     this.isLoading = state.isLoading
     this._updateResults()
@@ -175,7 +174,6 @@ export class HpSearch extends LitElement {
   }
 
   render() {
-    // console.log('render', this.isLoading, this.results)
     return html`
       <div class="shortcuts">
         <span>CTRL-J=&#8595;</span>

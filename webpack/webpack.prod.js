@@ -18,8 +18,8 @@ module.exports = merge(common, {
       skipWaiting: true,
       runtimeCaching: [
         {
-          handler: 'StaleWhileRevalidate',
-          urlPattern: /^https:\/\/.*\.json$/
+          urlPattern: /^https:\/\/.*\.json$/,
+          handler: 'CacheFirst'
         }
       ]
     }),
